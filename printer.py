@@ -4,11 +4,13 @@ from typing import TypedDict, cast
 
 
 class PrinterStatus(TypedDict):
+    """Contains variable  printer state info"""
+
     pass
 
 
 class PrinterInfo(TypedDict):
-    """Contains printer info stored in DB"""
+    """Contains (mostly) static printer info"""
 
     id: str
     ip: str
