@@ -27,7 +27,7 @@ class Printer:
     redis: Redis
     printer_info: PrinterInfo
     printer_status: PrinterStatus
-    client: mqtt.Client | None
+    client: mqtt.Client
 
     def __init__(
         self,
@@ -38,7 +38,6 @@ class Printer:
         self.redis = redis
         self.printer_info = self.fetch_printer_info(id)
         self.printer_status = self.fetch_entire_status()
-        self.client = None
 
     def set_client(self, client: mqtt.Client):
         """Sets the client for the printer"""
