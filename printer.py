@@ -1,7 +1,10 @@
 import paho.mqtt.client as mqtt
 from redis import Redis
-from typing import TypedDict
-from enum import Enum
+from typing import TypedDict, cast
+
+
+class PrinterStatus(TypedDict):
+    pass
 
 
 class PrinterInfo(TypedDict):
@@ -21,6 +24,8 @@ class Printer:
 
     redis: Redis
     printer_info: PrinterInfo
+    printer_status: PrinterStatus
+    client: mqtt.Client | None
 
     def __init__(
         self,
@@ -30,22 +35,30 @@ class Printer:
         """Initializes printer object"""
         self.redis = redis
         self.printer_info = self.fetch_printer_info(id)
+        self.printer_status = self.fetch_entire_status()
+        self.client = None
+
+    def set_client(self, client: mqtt.Client):
+        """Sets the client for the printer"""
+        self.client = client
 
     def fetch_printer_info(self, id: str) -> PrinterInfo:
         """Fetches printer info from DB"""
-        return self.redis.hgetall(id)
+        result = self.redis.hgetall(id)
+        return cast(PrinterInfo, result)
 
     def push_printer_info(self):
         """Updates printer info in DB"""
-        self.redis.hmset(self.printer_info["id"], self.printer_info)
+        self.redis.hmset(self.printer_info["id"], dict(self.printer_info))
 
     def fetch_status_value(self, key: str) -> str:
         """Fetches status value from DB"""
-        return self.redis.hget(self.printer_info["id"] + "_state", key)
+        return str(self.redis.hget(self.printer_info["id"] + "_state", key))
 
-    def fetch_entire_status(self) -> dict:
+    def fetch_entire_status(self) -> PrinterStatus:
         """Fetches entire status from DB"""
-        return self.redis.hgetall(self.printer_info["id"] + "_state")
+        result = self.redis.hgetall(self.printer_info["id"] + "_state")
+        return cast(PrinterStatus, result)
 
     def push_status_value(self, key: str, value: str):
         """Pushes status value to DB"""

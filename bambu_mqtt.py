@@ -4,7 +4,7 @@ import paho.mqtt.client as mqtt
 import json
 import ssl
 
-from printer import Printer
+from .printer import Printer
 
 
 class mqttMode(Enum):
@@ -24,7 +24,6 @@ class mqttData(TypedDict):
 def create_client(printer: Printer) -> mqtt.Client:
     """Creates MQTT client"""
     client = mqtt.Client()
-    client.check_hostname = False
     client.username_pw_set("bblp", printer.printer_info["access"])
     client.tls_set(tls_version=ssl.PROTOCOL_TLS, cert_reqs=ssl.CERT_NONE)
     client.on_connect = on_connect
@@ -43,11 +42,11 @@ def client_thread_func(printer: Printer, mode: mqttMode, client: mqtt.Client):
 def on_connect(client: mqtt.Client, userdata: mqttData, flags, rc):
     """Callback for connection"""
     print("Connected with result code " + str(rc))
-    if userdata.mode == mqttMode.LISTENER:
-        client.subscribe(f"device/{userdata.printer_info['serial']}/report")
+    if userdata["mode"] == mqttMode.LISTENER:
+        client.subscribe(f"device/{userdata['printer'].printer_info['serial']}/report")
 
 
-def on_message(client: mqtt.Client, userdata: mqttData, msg: str):
+def on_message(client: mqtt.Client, userdata: mqttData, msg):
     """Callback function for when a message is received."""
     doc: dict = json.loads(msg.payload)
 
@@ -68,7 +67,7 @@ def on_message(client: mqtt.Client, userdata: mqttData, msg: str):
     else:
         print("Unsupported message, no print. " + str(doc))
 
-    print(f"MESSAGE FROM {userdata.printer_info['id']}: ")
+    print(f"MESSAGE FROM {userdata['printer'].printer_info['id']}: ")
     print(json.dumps(doc))
 
 
