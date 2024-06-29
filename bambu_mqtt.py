@@ -39,12 +39,12 @@ def client_thread_func(printer: Printer, mode: mqttMode, client: mqtt.Client):
     client.loop_forever()
 
 
-def publish_mqtt_message(printer: Printer, command: str):
+def publish_mqtt_message(printer: Printer, command: dict):
     """Fire and forget an MQTT message"""
     printer.client.connect(printer.printer_info["ip"], 8883, 60)
     printer.client.publish(
-        f"device/{printer.printer_info['serial']}/command",
-        json.dumps({"command": command}),
+        f"device/{printer.printer_info['serial']}/request",
+        json.dumps(command),
     )
     printer.client.disconnect()
 
